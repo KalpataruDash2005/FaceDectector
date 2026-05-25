@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -181,6 +182,13 @@ public class ImageService {
                 .stream()
                 .map(this::toMatchResult)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> analyzeImage(Long id, String detectorBackend) {
+        ImageRecord record = imageRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Image not found: " + id));
+        return pythonAIService.analyzeImage(record.getFilePath(), detectorBackend);
     }
 
     @Transactional(readOnly = true)

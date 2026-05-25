@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -105,6 +108,35 @@ public class PythonAIService {
         } catch (Exception e) {
             log.warn("AI service health check failed: {}", e.getMessage());
             return false;
+        }
+    }
+
+    public Map<String, Object> analyzeImage(String imagePath, String detectorBackend) {
+        String url = aiServiceUrl + "/studio-analysis";
+        Map<String, Object> request = new HashMap<>();
+        request.put("imagePath", imagePath);
+        request.put("detectorBackend", detectorBackend != null ? detectorBackend : "retinaface");
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
+
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                return response.getBody();
+            }
+
+            return Map.of(
+                    "success", false,
+                    "error", "AI service returned: " + response.getStatusCode()
+            );
+        } catch (RestClientException e) {
+            log.error("Error calling AI service for studio analysis: {}", e.getMessage());
+            return Map.of(
+                    "success", false,
+                    "error", "Could not reach AI service: " + e.getMessage()
+            );
         }
     }
 }

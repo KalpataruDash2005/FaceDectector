@@ -3,86 +3,71 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Face Detection</title>
+    <title>Face Timeline Studio</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <main class="shell">
-      <section class="topbar">
-        <div>
-          <p class="eyebrow">Production Console</p>
-          <h1>Face Detection</h1>
+    <main class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-mark">FT</span>
+          <div>
+            <strong>Face Timeline Studio</strong>
+            <small>Local face intelligence lab</small>
+          </div>
         </div>
-        <div class="health" id="health">
+        <nav class="mode-list" id="modeList">
+          <button class="active" data-mode="timeline">Timeline Studio</button>
+          <button data-mode="movie">Movie Look Lab</button>
+          <button data-mode="doppelganger">Local Doppelganger</button>
+          <button data-mode="quality">Face Quality</button>
+          <button data-mode="disguise">Look Change</button>
+          <button data-mode="identity">Identity Board</button>
+          <button data-mode="poster">ID Card Generator</button>
+          <button data-mode="fake">AI Fake Check</button>
+        </nav>
+        <div class="status-card" id="health">
           <span class="dot pending"></span>
           <span>Checking services</span>
         </div>
-      </section>
+      </aside>
 
-      <section class="stats-grid" id="statsGrid"></section>
-
-      <section class="workspace">
-        <form class="panel upload-panel" id="uploadForm">
-          <div class="panel-head">
-            <div>
-              <h2>Upload Image</h2>
-              <p>Run face detection and save the image to the backend.</p>
-            </div>
+      <section class="content">
+        <header class="hero">
+          <div>
+            <p class="eyebrow">Dark mode forensic workspace</p>
+            <h1 id="modeTitle">Face Timeline Studio</h1>
+            <p id="modeCopy">Upload multiple photos over time, inspect face quality, metadata, similarity drift, and same-person confidence.</p>
           </div>
-          <label class="dropzone" id="dropzone">
-            <input id="fileInput" name="file" type="file" accept="image/*" required />
-            <span class="drop-icon">+</span>
-            <strong id="fileLabel">Choose or drop an image</strong>
-            <small>PNG, JPG, WEBP up to 10MB</small>
-          </label>
-          <div class="form-grid">
+          <div class="api-card">
             <label>
-              <span>Model</span>
-              <select id="uploadModel">
-                <option>VGG-Face</option>
-                <option>Facenet</option>
-                <option>ArcFace</option>
-                <option>OpenFace</option>
-                <option>DeepFace</option>
-              </select>
+              <span>API URL</span>
+              <input id="apiUrl" type="url" placeholder="/api/v1" />
             </label>
-            <label>
-              <span>Detector</span>
-              <select id="uploadDetector">
-                <option>retinaface</option>
-                <option>mtcnn</option>
-                <option>opencv</option>
-                <option>ssd</option>
-                <option>mediapipe</option>
-              </select>
-            </label>
+            <button id="saveApiButton" type="button">Save</button>
           </div>
-          <button class="primary" type="submit">
-            <span>Upload and Detect</span>
-          </button>
-          <p class="message" id="uploadMessage"></p>
-        </form>
+        </header>
 
-        <section class="panel compare-panel">
-          <div class="panel-head">
-            <div>
-              <h2>Compare Faces</h2>
-              <p>Select two completed uploads and check if they match.</p>
+        <section class="stats-grid" id="statsGrid"></section>
+
+        <section class="work-grid">
+          <form class="panel upload-panel" id="uploadForm">
+            <div class="panel-head">
+              <div>
+                <h2>Upload Dataset</h2>
+                <p>Add one or many local images. The app stores them locally and runs face detection.</p>
+              </div>
             </div>
-          </div>
-          <form id="compareForm">
+            <label class="dropzone" id="dropzone">
+              <input id="fileInput" name="file" type="file" accept="image/*" multiple required />
+              <span class="drop-icon">+</span>
+              <strong id="fileLabel">Choose or drop images</strong>
+              <small>PNG, JPG, WEBP up to 10MB each</small>
+            </label>
             <div class="form-grid">
               <label>
-                <span>First image</span>
-                <select id="imageOne"></select>
-              </label>
-              <label>
-                <span>Second image</span>
-                <select id="imageTwo"></select>
-              </label>
-              <label>
                 <span>Model</span>
-                <select id="compareModel">
+                <select id="uploadModel">
                   <option>VGG-Face</option>
                   <option>Facenet</option>
                   <option>ArcFace</option>
@@ -92,7 +77,7 @@
               </label>
               <label>
                 <span>Detector</span>
-                <select id="compareDetector">
+                <select id="uploadDetector">
                   <option>retinaface</option>
                   <option>mtcnn</option>
                   <option>opencv</option>
@@ -101,36 +86,82 @@
                 </select>
               </label>
             </div>
-            <button class="primary" type="submit">
-              <span>Compare Images</span>
-            </button>
+            <button class="primary" type="submit"><span>Upload and Analyze</span></button>
+            <p class="message" id="uploadMessage"></p>
           </form>
-          <div class="result" id="compareResult"></div>
-        </section>
-      </section>
 
-      <section class="panel">
-        <div class="panel-head split">
-          <div>
-            <h2>Image Library</h2>
-            <p>Browse uploads, inspect detections, and remove records.</p>
+          <section class="panel compare-panel">
+            <div class="panel-head">
+              <div>
+                <h2>Pair Lab</h2>
+                <p>Compare faces for character transformation, disguise detection, or local match confidence.</p>
+              </div>
+            </div>
+            <form id="compareForm">
+              <div class="form-grid">
+                <label>
+                  <span>First image</span>
+                  <select id="imageOne"></select>
+                </label>
+                <label>
+                  <span>Second image</span>
+                  <select id="imageTwo"></select>
+                </label>
+                <label>
+                  <span>Model</span>
+                  <select id="compareModel">
+                    <option>VGG-Face</option>
+                    <option>Facenet</option>
+                    <option>ArcFace</option>
+                    <option>OpenFace</option>
+                    <option>DeepFace</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Detector</span>
+                  <select id="compareDetector">
+                    <option>retinaface</option>
+                    <option>mtcnn</option>
+                    <option>opencv</option>
+                    <option>ssd</option>
+                    <option>mediapipe</option>
+                  </select>
+                </label>
+              </div>
+              <button class="primary" type="submit"><span>Compare Pair</span></button>
+            </form>
+            <div class="result" id="compareResult"></div>
+          </section>
+        </section>
+
+        <section class="panel module-panel">
+          <div class="panel-head split">
+            <div>
+              <h2 id="moduleTitle">Timeline Studio</h2>
+              <p id="moduleCopy">Sorted local uploads become a visual time board with metadata and face analysis.</p>
+            </div>
+            <button class="ghost" id="refreshButton" type="button">Refresh</button>
           </div>
-          <button class="ghost" id="refreshButton" type="button">Refresh</button>
-        </div>
-        <div class="toolbar">
-          <label>
-            <span>API URL</span>
-            <input id="apiUrl" type="url" placeholder="/api/v1" />
-          </label>
-          <button class="ghost" id="saveApiButton" type="button">Save</button>
-        </div>
-        <div class="gallery" id="gallery"></div>
+          <div class="module-output" id="moduleOutput"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head split">
+            <div>
+              <h2>Local Image Library</h2>
+              <p>Open any card for quality, palette, fake-photo risk, identity card, and report data.</p>
+            </div>
+          </div>
+          <div class="gallery" id="gallery"></div>
+        </section>
       </section>
     </main>
 
     <template id="imageCardTemplate">
       <article class="image-card">
-        <img alt="" />
+        <div class="thumb-wrap">
+          <img alt="" />
+        </div>
         <div class="image-body">
           <div>
             <h3></h3>
@@ -139,7 +170,7 @@
           <div class="badge"></div>
           <dl></dl>
           <div class="card-actions">
-            <button class="ghost detail-button" type="button">Details</button>
+            <button class="ghost detail-button" type="button">Studio</button>
             <button class="danger delete-button" type="button">Delete</button>
           </div>
         </div>
@@ -148,7 +179,10 @@
 
     <dialog id="detailDialog">
       <div class="dialog-head">
-        <h2 id="detailTitle"></h2>
+        <div>
+          <p class="eyebrow">Visual identity card</p>
+          <h2 id="detailTitle"></h2>
+        </div>
         <button class="icon-button" id="closeDialog" type="button">x</button>
       </div>
       <div id="detailBody"></div>

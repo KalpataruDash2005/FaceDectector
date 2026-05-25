@@ -1,17 +1,17 @@
-﻿Face Detection
+Face Timeline Studio
 
-Production-ready face detection app with a static frontend, Spring Boot API, PostgreSQL, and a Python DeepFace service.
+Dark-mode local face intelligence app with a static frontend, Spring Boot API, PostgreSQL, and a Python DeepFace/OpenCV service.
 
 Project path:
 
 ```text
-D:\Coading World\face-detection
+D:\Coading World\face-detection-latest
 ```
 
 Run full app with Docker:
 
 ```bash
-cd "D:\Coading World\face-detection"
+cd "D:\Coading World\face-detection-latest"
 docker compose up --build
 ```
 
@@ -35,7 +35,7 @@ Run backend from IntelliJ:
 ```text
 1. Stop the backend container if it is running.
 2. Keep postgres and ai-service running with Docker.
-3. Open D:\Coading World\face-detection\backend in IntelliJ.
+3. Open D:\Coading World\face-detection-latest\backend in IntelliJ.
 4. Use Java 17 or newer.
 5. Run com.facedetection.FaceDetectionApplication.
 ```
@@ -43,7 +43,7 @@ Run backend from IntelliJ:
 Start only backend dependencies for IntelliJ:
 
 ```bash
-cd "D:\Coading World\face-detection"
+cd "D:\Coading World\face-detection-latest"
 docker compose up --build postgres ai-service
 ```
 
@@ -55,25 +55,20 @@ Database: jdbc:postgresql://localhost:15433/facedetection
 DB user:  faceuser
 DB pass:  facepass
 AI:       http://localhost:18001
-Uploads:  D:/Coading World/face-detection/uploads
+Uploads:  D:/Coading World/face-detection-latest/uploads
 ```
 
-If Docker says a container name is already in use, the project no longer creates fixed container names. Run this once to stop old containers from the previous configuration:
-
-```bash
-docker stop facedetection-db facedetection-ai facedetection-backend facedetection-frontend
-```
-
-Main features:
+Studio features:
 
 ```text
-Upload images
-Detect face count
-Preview uploaded images
-Compare two completed uploads
-View image metadata and match history
-Delete uploaded image records
-Check backend and AI health
+Face Timeline Studio
+Movie Character Look Lab
+Local Doppelganger Finder
+Face Quality Analyzer
+Disguise / Look Change Detector
+Cinematic Identity Board
+Missing Poster / ID Card Generator
+AI Fake Photo Detector
 ```
 
 Useful endpoints:
@@ -84,8 +79,10 @@ GET    /api/v1/stats
 GET    /api/v1/images
 GET    /api/v1/images/{id}
 GET    /api/v1/images/{id}/file
+GET    /api/v1/images/{id}/studio-analysis
 POST   /api/v1/images/upload
 POST   /api/v1/images/compare
 DELETE /api/v1/images/{id}
 ```
 
+The AI fake-photo detector is a local heuristic based on texture, edge density, smoothness, and symmetry. Treat it as a review signal, not a guaranteed authenticity verdict.

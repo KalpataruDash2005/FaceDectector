@@ -108,6 +108,13 @@ public class ImageController {
         return ResponseEntity.ok(imageService.getMatchesForImage(id));
     }
 
+    @GetMapping("/images/{id}/studio-analysis")
+    public ResponseEntity<Map<String, Object>> analyzeImage(
+            @PathVariable Long id,
+            @RequestParam(value = "detectorBackend", defaultValue = "retinaface") String detectorBackend) {
+        return ResponseEntity.ok(imageService.analyzeImage(id, detectorBackend));
+    }
+
     @GetMapping("/stats")
     public ResponseEntity<ImageDto.Stats> getStats() {
         return ResponseEntity.ok(imageService.getStats());
