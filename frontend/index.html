@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Face Detection</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">Production Console</p>
+          <h1>Face Detection</h1>
+        </div>
+        <div class="health" id="health">
+          <span class="dot pending"></span>
+          <span>Checking services</span>
+        </div>
+      </section>
+
+      <section class="stats-grid" id="statsGrid"></section>
+
+      <section class="workspace">
+        <form class="panel upload-panel" id="uploadForm">
+          <div class="panel-head">
+            <div>
+              <h2>Upload Image</h2>
+              <p>Run face detection and save the image to the backend.</p>
+            </div>
+          </div>
+          <label class="dropzone" id="dropzone">
+            <input id="fileInput" name="file" type="file" accept="image/*" required />
+            <span class="drop-icon">+</span>
+            <strong id="fileLabel">Choose or drop an image</strong>
+            <small>PNG, JPG, WEBP up to 10MB</small>
+          </label>
+          <div class="form-grid">
+            <label>
+              <span>Model</span>
+              <select id="uploadModel">
+                <option>VGG-Face</option>
+                <option>Facenet</option>
+                <option>ArcFace</option>
+                <option>OpenFace</option>
+                <option>DeepFace</option>
+              </select>
+            </label>
+            <label>
+              <span>Detector</span>
+              <select id="uploadDetector">
+                <option>retinaface</option>
+                <option>mtcnn</option>
+                <option>opencv</option>
+                <option>ssd</option>
+                <option>mediapipe</option>
+              </select>
+            </label>
+          </div>
+          <button class="primary" type="submit">
+            <span>Upload and Detect</span>
+          </button>
+          <p class="message" id="uploadMessage"></p>
+        </form>
+
+        <section class="panel compare-panel">
+          <div class="panel-head">
+            <div>
+              <h2>Compare Faces</h2>
+              <p>Select two completed uploads and check if they match.</p>
+            </div>
+          </div>
+          <form id="compareForm">
+            <div class="form-grid">
+              <label>
+                <span>First image</span>
+                <select id="imageOne"></select>
+              </label>
+              <label>
+                <span>Second image</span>
+                <select id="imageTwo"></select>
+              </label>
+              <label>
+                <span>Model</span>
+                <select id="compareModel">
+                  <option>VGG-Face</option>
+                  <option>Facenet</option>
+                  <option>ArcFace</option>
+                  <option>OpenFace</option>
+                  <option>DeepFace</option>
+                </select>
+              </label>
+              <label>
+                <span>Detector</span>
+                <select id="compareDetector">
+                  <option>retinaface</option>
+                  <option>mtcnn</option>
+                  <option>opencv</option>
+                  <option>ssd</option>
+                  <option>mediapipe</option>
+                </select>
+              </label>
+            </div>
+            <button class="primary" type="submit">
+              <span>Compare Images</span>
+            </button>
+          </form>
+          <div class="result" id="compareResult"></div>
+        </section>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head split">
+          <div>
+            <h2>Image Library</h2>
+            <p>Browse uploads, inspect detections, and remove records.</p>
+          </div>
+          <button class="ghost" id="refreshButton" type="button">Refresh</button>
+        </div>
+        <div class="toolbar">
+          <label>
+            <span>API URL</span>
+            <input id="apiUrl" type="url" placeholder="/api/v1" />
+          </label>
+          <button class="ghost" id="saveApiButton" type="button">Save</button>
+        </div>
+        <div class="gallery" id="gallery"></div>
+      </section>
+    </main>
+
+    <template id="imageCardTemplate">
+      <article class="image-card">
+        <img alt="" />
+        <div class="image-body">
+          <div>
+            <h3></h3>
+            <p></p>
+          </div>
+          <div class="badge"></div>
+          <dl></dl>
+          <div class="card-actions">
+            <button class="ghost detail-button" type="button">Details</button>
+            <button class="danger delete-button" type="button">Delete</button>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <dialog id="detailDialog">
+      <div class="dialog-head">
+        <h2 id="detailTitle"></h2>
+        <button class="icon-button" id="closeDialog" type="button">x</button>
+      </div>
+      <div id="detailBody"></div>
+    </dialog>
+
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>

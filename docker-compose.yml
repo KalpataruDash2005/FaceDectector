@@ -1,0 +1,71 @@
+﻿services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: facedetection
+      POSTGRES_USER: faceuser
+      POSTGRES_PASSWORD: facepass
+    ports:
+      - "15433:5432"
+    volumes:
+      - postgres_data_v2:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U faceuser -d facedetection"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "18001:8000"
+    volumes:
+      - ./uploads:/app/uploads
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "18081:8080"
+    volumes:
+      - ./uploads:/app/uploads
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/facedetection
+      SPRING_DATASOURCE_USERNAME: faceuser
+      SPRING_DATASOURCE_PASSWORD: facepass
+      APP_AI_SERVICE_URL: http://ai-service:8000
+      APP_UPLOAD_DIR: /app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data_v2:
+
