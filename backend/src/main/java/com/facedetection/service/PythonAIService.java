@@ -10,6 +10,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 @Service
@@ -27,8 +28,8 @@ public class PythonAIService {
 
         FaceMatchDto.DetectRequest request = FaceMatchDto.DetectRequest.builder()
                 .imagePath(imagePath)
-                .model(model != null ? model : "VGG-Face")
-                .detectorBackend(detectorBackend != null ? detectorBackend : "retinaface")
+                .model(normalizeModel(model))
+                .detectorBackend(normalizeDetector(detectorBackend))
                 .build();
 
         try {
@@ -67,8 +68,8 @@ public class PythonAIService {
         FaceMatchDto.CompareRequest request = FaceMatchDto.CompareRequest.builder()
                 .imagePath1(imagePath1)
                 .imagePath2(imagePath2)
-                .model(model != null ? model : "VGG-Face")
-                .detectorBackend(detectorBackend != null ? detectorBackend : "retinaface")
+                .model(normalizeModel(model))
+                .detectorBackend(normalizeDetector(detectorBackend))
                 .build();
 
         try {
@@ -115,7 +116,7 @@ public class PythonAIService {
         String url = aiServiceUrl + "/studio-analysis";
         Map<String, Object> request = new HashMap<>();
         request.put("imagePath", imagePath);
-        request.put("detectorBackend", detectorBackend != null ? detectorBackend : "retinaface");
+        request.put("detectorBackend", normalizeDetector(detectorBackend));
 
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -138,5 +139,22 @@ public class PythonAIService {
                     "error", "Could not reach AI service: " + e.getMessage()
             );
         }
+    }
+
+    private String normalizeModel(String model) {
+        String key = (model == null || model.isBlank() ? "VGG-Face" : model).trim().toLowerCase(Locale.ROOT);
+        return switch (key) {
+            case "vcg-face", "vgg-face" -> "VGG-Face";
+            case "facenet", "face-net", "face_net" -> "Facenet";
+            default -> throw new IllegalArgumentException("Unsupported model. Use VCG-Face or FaceNet.");
+        };
+    }
+
+    private String normalizeDetector(String detectorBackend) {
+        String key = (detectorBackend == null || detectorBackend.isBlank() ? "opencv" : detectorBackend).trim().toLowerCase(Locale.ROOT);
+        return switch (key) {
+            case "opencv", "retinaface", "mediapipe" -> key;
+            default -> throw new IllegalArgumentException("Unsupported detector. Use OpenCV, RetinaFace, or Mediapipe.");
+        };
     }
 }
