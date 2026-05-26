@@ -44,13 +44,20 @@ public class ImageService {
                                                     String detectorBackend) throws IOException {
         validateImageFile(file);
 
-        String storedFilename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        String originalFilename = Path.of((file.getOriginalFilename() == null ? "upload" : file.getOriginalFilename()).replace("\\", "/"))
+                .getFileName()
+                .toString()
+                .replaceAll("[^A-Za-z0-9._-]", "_");
+        if (originalFilename.isBlank() || originalFilename.equals(".") || originalFilename.equals("..")) {
+            originalFilename = "upload";
+        }
+        String storedFilename = UUID.randomUUID() + "_" + originalFilename;
         Path filePath = uploadPath.resolve(storedFilename);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
         log.info("Saved uploaded file: {}", filePath);
 
         ImageRecord record = ImageRecord.builder()
-                .originalFilename(file.getOriginalFilename())
+                .originalFilename(originalFilename)
                 .storedFilename(storedFilename)
                 .filePath(filePath.toString())
                 .fileSize(file.getSize())
@@ -93,6 +100,13 @@ public class ImageService {
 
     @Transactional
     public FaceMatchDto.MatchResult compareImages(FaceMatchDto.CompareImagesRequest request) {
+        if (request.getImageId1() == null || request.getImageId2() == null) {
+            throw new IllegalArgumentException("Both image ids are required");
+        }
+        if (request.getImageId1().equals(request.getImageId2())) {
+            throw new IllegalArgumentException("Choose two different images");
+        }
+
         ImageRecord source = imageRepository.findById(request.getImageId1())
                 .orElseThrow(() -> new EntityNotFoundException("Image not found: " + request.getImageId1()));
         ImageRecord target = imageRepository.findById(request.getImageId2())

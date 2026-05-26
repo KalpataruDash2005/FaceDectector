@@ -40,8 +40,8 @@ public class ImageController {
     @PostMapping(value = "/images/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ImageDto.UploadResponse> uploadImage(
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "model", defaultValue = "VGG-Face") String model,
-            @RequestParam(value = "detectorBackend", defaultValue = "retinaface") String detectorBackend) {
+            @RequestParam(value = "model", defaultValue = "VCG-Face") String model,
+            @RequestParam(value = "detectorBackend", defaultValue = "opencv") String detectorBackend) {
 
         log.info("Upload request: file={}, model={}, detector={}",
                 file.getOriginalFilename(), model, detectorBackend);
@@ -49,8 +49,7 @@ public class ImageController {
             ImageDto.UploadResponse response = imageService.uploadAndDetect(file, model, detectorBackend);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
-            log.warn("Bad upload request: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
+            throw e;
         } catch (Exception e) {
             log.error("Upload failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
@@ -67,6 +66,8 @@ public class ImageController {
             return ResponseEntity.ok(result);
         } catch (jakarta.persistence.EntityNotFoundException e) {
             return ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Compare failed: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
@@ -111,7 +112,7 @@ public class ImageController {
     @GetMapping("/images/{id}/studio-analysis")
     public ResponseEntity<Map<String, Object>> analyzeImage(
             @PathVariable Long id,
-            @RequestParam(value = "detectorBackend", defaultValue = "retinaface") String detectorBackend) {
+            @RequestParam(value = "detectorBackend", defaultValue = "opencv") String detectorBackend) {
         return ResponseEntity.ok(imageService.analyzeImage(id, detectorBackend));
     }
 

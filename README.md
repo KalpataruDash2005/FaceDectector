@@ -1,6 +1,6 @@
-Face Timeline Studio
+AI Face Check
 
-Dark-mode local face intelligence app with a static frontend, Spring Boot API, PostgreSQL, and a Python DeepFace/OpenCV service.
+Dark-mode local face app with a static frontend, Spring Boot API, PostgreSQL, and a Python DeepFace/OpenCV service.
 
 Project path:
 
@@ -58,17 +58,26 @@ AI:       http://localhost:18001
 Uploads:  D:/Coading World/face-detection-latest/uploads
 ```
 
-Studio features:
+Features:
 
 ```text
-Face Timeline Studio
-Movie Character Look Lab
-Local Doppelganger Finder
-Face Quality Analyzer
-Disguise / Look Change Detector
-Cinematic Identity Board
-Missing Poster / ID Card Generator
-AI Fake Photo Detector
+AI Check
+Local Doppleganger
+```
+
+Allowed models:
+
+```text
+VCG-Face
+FaceNet
+```
+
+Allowed detectors:
+
+```text
+OpenCV
+RetinaFace
+Mediapipe
 ```
 
 Useful endpoints:
@@ -85,4 +94,4 @@ POST   /api/v1/images/compare
 DELETE /api/v1/images/{id}
 ```
 
-The AI fake-photo detector is a local heuristic based on texture, edge density, smoothness, and symmetry. Treat it as a review signal, not a guaranteed authenticity verdict.
+The AI check is a local heuristic based on texture, edge density, smoothness, and symmetry. Treat it as a review signal, not a guaranteed authenticity verdict.

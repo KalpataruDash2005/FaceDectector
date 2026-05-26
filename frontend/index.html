@@ -3,28 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Face Timeline Studio</title>
+    <title>AI Face Check</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="app-shell">
       <aside class="sidebar">
         <div class="brand">
-          <span class="brand-mark">FT</span>
+          <span class="brand-mark">AI</span>
           <div>
-            <strong>Face Timeline Studio</strong>
-            <small>Local face intelligence lab</small>
+            <strong>AI Face Check</strong>
+            <small>Local face analysis</small>
           </div>
         </div>
         <nav class="mode-list" id="modeList">
-          <button class="active" data-mode="timeline">Timeline Studio</button>
-          <button data-mode="movie">Movie Look Lab</button>
-          <button data-mode="doppelganger">Local Doppelganger</button>
-          <button data-mode="quality">Face Quality</button>
-          <button data-mode="disguise">Look Change</button>
-          <button data-mode="identity">Identity Board</button>
-          <button data-mode="poster">ID Card Generator</button>
-          <button data-mode="fake">AI Fake Check</button>
+          <button class="active" data-mode="fake">AI Check</button>
+          <button data-mode="doppelganger">Local Doppleganger</button>
         </nav>
         <div class="status-card" id="health">
           <span class="dot pending"></span>
@@ -35,9 +29,9 @@
       <section class="content">
         <header class="hero">
           <div>
-            <p class="eyebrow">Dark mode forensic workspace</p>
-            <h1 id="modeTitle">Face Timeline Studio</h1>
-            <p id="modeCopy">Upload multiple photos over time, inspect face quality, metadata, similarity drift, and same-person confidence.</p>
+            <p class="eyebrow">Local face workspace</p>
+            <h1 id="modeTitle">AI Check</h1>
+            <p id="modeCopy">Estimate AI-generated or manipulated-photo risk with local image signals.</p>
           </div>
           <div class="api-card">
             <label>
@@ -54,7 +48,7 @@
           <form class="panel upload-panel" id="uploadForm">
             <div class="panel-head">
               <div>
-                <h2>Upload Dataset</h2>
+                <h2>Upload Images</h2>
                 <p>Add one or many local images. The app stores them locally and runs face detection.</p>
               </div>
             </div>
@@ -68,21 +62,16 @@
               <label>
                 <span>Model</span>
                 <select id="uploadModel">
-                  <option>VGG-Face</option>
-                  <option>Facenet</option>
-                  <option>ArcFace</option>
-                  <option>OpenFace</option>
-                  <option>DeepFace</option>
+                  <option value="VCG-Face">VCG-Face</option>
+                  <option value="FaceNet">FaceNet</option>
                 </select>
               </label>
               <label>
                 <span>Detector</span>
                 <select id="uploadDetector">
-                  <option>retinaface</option>
-                  <option>mtcnn</option>
-                  <option>opencv</option>
-                  <option>ssd</option>
-                  <option>mediapipe</option>
+                  <option value="opencv">OpenCV</option>
+                  <option value="retinaface">RetinaFace</option>
+                  <option value="mediapipe">Mediapipe</option>
                 </select>
               </label>
             </div>
@@ -93,8 +82,8 @@
           <section class="panel compare-panel">
             <div class="panel-head">
               <div>
-                <h2>Pair Lab</h2>
-                <p>Compare faces for character transformation, disguise detection, or local match confidence.</p>
+                <h2>Local Doppleganger</h2>
+                <p>Compare two local images to find closest same-person or lookalike matches.</p>
               </div>
             </div>
             <form id="compareForm">
@@ -110,21 +99,16 @@
                 <label>
                   <span>Model</span>
                   <select id="compareModel">
-                    <option>VGG-Face</option>
-                    <option>Facenet</option>
-                    <option>ArcFace</option>
-                    <option>OpenFace</option>
-                    <option>DeepFace</option>
+                    <option value="VCG-Face">VCG-Face</option>
+                    <option value="FaceNet">FaceNet</option>
                   </select>
                 </label>
                 <label>
                   <span>Detector</span>
                   <select id="compareDetector">
-                    <option>retinaface</option>
-                    <option>mtcnn</option>
-                    <option>opencv</option>
-                    <option>ssd</option>
-                    <option>mediapipe</option>
+                    <option value="opencv">OpenCV</option>
+                    <option value="retinaface">RetinaFace</option>
+                    <option value="mediapipe">Mediapipe</option>
                   </select>
                 </label>
               </div>
@@ -137,8 +121,8 @@
         <section class="panel module-panel">
           <div class="panel-head split">
             <div>
-              <h2 id="moduleTitle">Timeline Studio</h2>
-              <p id="moduleCopy">Sorted local uploads become a visual time board with metadata and face analysis.</p>
+              <h2 id="moduleTitle">AI Check</h2>
+              <p id="moduleCopy">Open an image card to inspect the local AI-risk signal.</p>
             </div>
             <button class="ghost" id="refreshButton" type="button">Refresh</button>
           </div>
@@ -149,7 +133,7 @@
           <div class="panel-head split">
             <div>
               <h2>Local Image Library</h2>
-              <p>Open any card for quality, palette, fake-photo risk, identity card, and report data.</p>
+              <p>Open any card for AI check details or compare two uploads for local doppleganger matches.</p>
             </div>
           </div>
           <div class="gallery" id="gallery"></div>
@@ -170,7 +154,7 @@
           <div class="badge"></div>
           <dl></dl>
           <div class="card-actions">
-            <button class="ghost detail-button" type="button">Studio</button>
+            <button class="ghost detail-button" type="button">Details</button>
             <button class="danger delete-button" type="button">Delete</button>
           </div>
         </div>
@@ -180,7 +164,7 @@
     <dialog id="detailDialog">
       <div class="dialog-head">
         <div>
-          <p class="eyebrow">Visual identity card</p>
+          <p class="eyebrow">AI check details</p>
           <h2 id="detailTitle"></h2>
         </div>
         <button class="icon-button" id="closeDialog" type="button">x</button>

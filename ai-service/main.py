@@ -1,5 +1,6 @@
 import json
 import os
+import importlib.util
 import traceback
 
 import cv2
@@ -25,25 +26,81 @@ app.add_middleware(
 
 class DetectRequest(BaseModel):
     imagePath: str
-    model: str = "VGG-Face"
-    detectorBackend: str = "retinaface"
+    model: str = "VCG-Face"
+    detectorBackend: str = "opencv"
 
 
 class CompareRequest(BaseModel):
     imagePath1: str
     imagePath2: str
-    model: str = "VGG-Face"
-    detectorBackend: str = "retinaface"
+    model: str = "VCG-Face"
+    detectorBackend: str = "opencv"
 
 
 class AnalyzeRequest(BaseModel):
     imagePath: str
-    detectorBackend: str = "retinaface"
+    detectorBackend: str = "opencv"
 
 
 class StudioAnalysisRequest(BaseModel):
     imagePath: str
-    detectorBackend: str = "retinaface"
+    detectorBackend: str = "opencv"
+
+
+MODEL_ALIASES = {
+    "vcg-face": "VGG-Face",
+    "vgg-face": "VGG-Face",
+    "facenet": "Facenet",
+    "face-net": "Facenet",
+    "face_net": "Facenet",
+}
+
+DETECTOR_ALIASES = {
+    "opencv": "opencv",
+    "retinaface": "retinaface",
+    "mediapipe": "mediapipe",
+}
+
+DETECTOR_PACKAGES = {
+    "opencv": "cv2",
+    "retinaface": "retinaface",
+    "mediapipe": "mediapipe",
+}
+
+
+def normalize_model(model: str | None) -> str:
+    key = (model or "VGG-Face").strip().lower()
+    normalized = MODEL_ALIASES.get(key)
+    if not normalized:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported model. Use VCG-Face or FaceNet.",
+        )
+    return normalized
+
+
+def normalize_detector(detector_backend: str | None) -> str:
+    key = (detector_backend or "opencv").strip().lower()
+    normalized = DETECTOR_ALIASES.get(key)
+    if not normalized:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported detector. Use OpenCV, RetinaFace, or Mediapipe.",
+        )
+    return normalized
+
+
+def detector_is_available(detector_backend: str) -> bool:
+    package_name = DETECTOR_PACKAGES.get(detector_backend)
+    return package_name is None or importlib.util.find_spec(package_name) is not None
+
+
+def validate_detector_available(detector_backend: str) -> None:
+    if not detector_is_available(detector_backend):
+        raise HTTPException(
+            status_code=503,
+            detail=f"{detector_backend} detector is not installed in the AI service image. Rebuild ai-service after updating requirements.txt.",
+        )
 
 
 def validate_image_path(path: str) -> None:
@@ -211,19 +268,26 @@ def health():
         "status": "UP",
         "service": "face-detection-ai",
         "version": "1.0.0",
+        "detectors": {
+            detector: detector_is_available(detector)
+            for detector in DETECTOR_ALIASES.values()
+        },
     }
 
 
 @app.post("/detect")
 def detect_faces(request: DetectRequest):
     validate_image_path(request.imagePath)
+    normalize_model(request.model)
+    detector_backend = normalize_detector(request.detectorBackend)
+    validate_detector_available(detector_backend)
     img = read_image(request.imagePath)
     metadata = get_image_metadata(request.imagePath, img)
 
     try:
         faces = DeepFace.extract_faces(
             img_path=request.imagePath,
-            detector_backend=request.detectorBackend,
+            detector_backend=detector_backend,
             enforce_detection=False,
         )
 
@@ -232,7 +296,7 @@ def detect_faces(request: DetectRequest):
             region = face.get("facial_area", {})
             confidence = face.get("confidence", 0.0)
 
-            if confidence > 0.5 or len(faces) == 1:
+            if confidence > 0.5:
                 face_list.append({
                     "x": region.get("x", 0),
                     "y": region.get("y", 0),
@@ -265,13 +329,16 @@ def detect_faces(request: DetectRequest):
 def compare_faces(request: CompareRequest):
     validate_image_path(request.imagePath1)
     validate_image_path(request.imagePath2)
+    model = normalize_model(request.model)
+    detector_backend = normalize_detector(request.detectorBackend)
+    validate_detector_available(detector_backend)
 
     try:
         result = DeepFace.verify(
             img1_path=request.imagePath1,
             img2_path=request.imagePath2,
-            model_name=request.model,
-            detector_backend=request.detectorBackend,
+            model_name=model,
+            detector_backend=detector_backend,
             enforce_detection=False,
         )
 
@@ -291,8 +358,8 @@ def compare_faces(request: CompareRequest):
             "isMatch": is_match,
             "distance": round(distance, 6),
             "confidenceScore": confidence_score,
-            "model": request.model,
-            "detectorBackend": request.detectorBackend,
+            "model": model,
+            "detectorBackend": detector_backend,
             "faceRegion": face_region,
             "error": None,
         }
@@ -305,8 +372,8 @@ def compare_faces(request: CompareRequest):
             "isMatch": False,
             "distance": 1.0,
             "confidenceScore": 0.0,
-            "model": request.model,
-            "detectorBackend": request.detectorBackend,
+            "model": model,
+            "detectorBackend": detector_backend,
             "faceRegion": "{}",
             "error": str(e),
         }
@@ -315,12 +382,14 @@ def compare_faces(request: CompareRequest):
 @app.post("/analyze")
 def analyze_face(request: AnalyzeRequest):
     validate_image_path(request.imagePath)
+    detector_backend = normalize_detector(request.detectorBackend)
+    validate_detector_available(detector_backend)
 
     try:
         results = DeepFace.analyze(
             img_path=request.imagePath,
             actions=["age", "gender", "emotion", "race"],
-            detector_backend=request.detectorBackend,
+            detector_backend=detector_backend,
             enforce_detection=False,
         )
 
@@ -358,13 +427,15 @@ def analyze_face(request: AnalyzeRequest):
 @app.post("/studio-analysis")
 def studio_analysis(request: StudioAnalysisRequest):
     validate_image_path(request.imagePath)
+    detector_backend = normalize_detector(request.detectorBackend)
+    validate_detector_available(detector_backend)
     img = read_image(request.imagePath)
     metadata = get_image_metadata(request.imagePath, img)
 
     try:
         faces = DeepFace.extract_faces(
             img_path=request.imagePath,
-            detector_backend=request.detectorBackend,
+            detector_backend=detector_backend,
             enforce_detection=False,
         )
     except Exception:
@@ -374,7 +445,7 @@ def studio_analysis(request: StudioAnalysisRequest):
     for face in faces:
         region = face.get("facial_area", {})
         confidence = face.get("confidence", 0.0)
-        if confidence > 0.5 or len(faces) == 1:
+        if confidence > 0.5:
             face_list.append({
                 "x": region.get("x", 0),
                 "y": region.get("y", 0),
@@ -383,55 +454,14 @@ def studio_analysis(request: StudioAnalysisRequest):
                 "confidence": round(float(confidence), 4),
             })
 
-    expression = "neutral"
-    demographic = {}
-    try:
-        analysis = DeepFace.analyze(
-            img_path=request.imagePath,
-            actions=["age", "gender", "emotion"],
-            detector_backend=request.detectorBackend,
-            enforce_detection=False,
-        )
-        if isinstance(analysis, list):
-            analysis = analysis[0] if analysis else {}
-        expression = analysis.get("dominant_emotion", "neutral")
-        demographic = {
-            "estimatedAge": analysis.get("age"),
-            "dominantGender": analysis.get("dominant_gender"),
-            "dominantEmotion": expression,
-            "region": analysis.get("region", {}),
-        }
-    except Exception:
-        demographic = {
-            "estimatedAge": None,
-            "dominantGender": None,
-            "dominantEmotion": expression,
-            "region": {},
-        }
-
-    quality = compute_quality(img, faces)
     fake_signal = compute_fake_signal(img)
-    palette = extract_palette(img)
-    identity = summarize_identity(quality, fake_signal, expression, len(face_list))
 
     return {
         "success": True,
         "metadata": metadata,
         "faceCount": len(face_list),
         "faces": face_list,
-        "quality": quality,
         "fakePhoto": fake_signal,
-        "palette": palette,
-        "demographic": demographic,
-        "identityCard": identity,
-        "timeline": {
-            "timelineReady": len(face_list) == 1 and quality["overallScore"] >= 45,
-            "similarityDriftHint": "Compare this image with older or newer uploads to estimate visual drift.",
-        },
-        "missingPoster": {
-            "reportReady": len(face_list) >= 1,
-            "recommendedNote": "Use only consented images and add verified human notes before printing.",
-        },
         "error": None,
     }
 

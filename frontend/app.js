@@ -32,60 +32,24 @@ const els = {
 };
 
 const modes = {
-  timeline: {
-    title: "Face Timeline Studio",
-    copy: "Upload multiple photos over time, inspect face boxes, metadata, similarity drift, and same-person confidence.",
-    module: "Timeline Studio",
-    moduleCopy: "Sorted local uploads become a visual time board with metadata and face analysis.",
-  },
-  movie: {
-    title: "Movie Character Look Lab",
-    copy: "Compare actor or character images for face similarity, palette change, costume tone, expression, and transformation score.",
-    module: "Character Transformation",
-    moduleCopy: "Use Pair Lab, then open Studio cards to inspect palette and expression differences.",
+  fake: {
+    title: "AI Check",
+    copy: "Estimate AI-generated or manipulated-photo risk with local texture, smoothness, symmetry, and edge-density heuristics.",
+    module: "AI Check Board",
+    moduleCopy: "This is a local heuristic signal, not a court-grade authenticity result.",
   },
   doppelganger: {
-    title: "Local Doppelganger Finder",
-    copy: "Build a small local dataset of celebrities, classmates, actors, or characters and find the closest visual match.",
+    title: "Local Doppleganger",
+    copy: "Compare your local uploads and find the closest visual match using face embeddings.",
     module: "Local Match Board",
-    moduleCopy: "The closest-match workflow uses your uploaded local library only.",
-  },
-  quality: {
-    title: "Face Quality Analyzer",
-    copy: "Score images for ID, passport, profile photo, and recognition readiness using blur, lighting, face framing, and eye visibility.",
-    module: "Quality Leaderboard",
-    moduleCopy: "Open Studio on any image for full quality and fake-photo signals.",
-  },
-  disguise: {
-    title: "Disguise / Look Change Detector",
-    copy: "Upload before-after images and compare beard, glasses, hairstyle, expression, and same-person confidence.",
-    module: "Look Change Lab",
-    moduleCopy: "Pair Lab provides match confidence, while Studio cards explain visual changes.",
-  },
-  identity: {
-    title: "Cinematic Identity Board",
-    copy: "Generate a dashboard with detected face, dominant colors, expression label, confidence, graph data, and identity card.",
-    module: "Identity Cards",
-    moduleCopy: "Each image can generate a local visual identity card.",
-  },
-  poster: {
-    title: "Missing Poster / ID Card Generator",
-    copy: "Create a clean printable local report with image crop, metadata, notes, and match history for consented images.",
-    module: "Printable Report Data",
-    moduleCopy: "Open Studio on a card and print the browser dialog when the report data is ready.",
-  },
-  fake: {
-    title: "AI Fake Photo Detector",
-    copy: "Estimate AI-generated or manipulated-photo risk with local texture, smoothness, symmetry, and edge-density heuristics.",
-    module: "Fake Photo Risk Board",
-    moduleCopy: "This is a local heuristic signal, not a court-grade authenticity result.",
+    moduleCopy: "The closest-match workflow uses only the images you upload here.",
   },
 };
 
 const state = {
   images: [],
   apiBase: localStorage.getItem("faceDetectionApiBase") || "/api/v1",
-  mode: "timeline",
+  mode: "fake",
   analysisCache: new Map(),
 };
 
@@ -117,6 +81,14 @@ const request = async (path, options = {}) => {
 };
 
 const formatDate = (value) => value ? new Date(value).toLocaleString() : "Not processed";
+
+const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  "\"": "&quot;",
+  "'": "&#39;",
+}[char]));
 
 const formatBytes = (bytes) => {
   if (!bytes && bytes !== 0) return "Unknown";
@@ -156,7 +128,7 @@ const completedImages = () => state.images.filter((image) => image.processingSta
 
 const fillCompareSelects = () => {
   const options = completedImages().map((image) => (
-    `<option value="${image.id}">#${image.id} ${image.originalFilename}</option>`
+    `<option value="${image.id}">#${image.id} ${escapeHtml(image.originalFilename)}</option>`
   )).join("");
   const fallback = `<option value="">Upload completed images first</option>`;
   els.imageOne.innerHTML = options || fallback;
@@ -173,7 +145,7 @@ const loadAnalysis = async (id) => {
 const renderGallery = () => {
   els.gallery.innerHTML = "";
   if (!state.images.length) {
-    els.gallery.innerHTML = `<p>No images uploaded yet. Add a local dataset to unlock the studio modules.</p>`;
+    els.gallery.innerHTML = `<p>No images uploaded yet. Add local images to run AI checks and doppleganger comparisons.</p>`;
     fillCompareSelects();
     renderModule();
     return;
@@ -289,9 +261,9 @@ const compareImages = async (event) => {
     });
     const transformation = Math.max(0, 100 - Number(result.confidenceScore ?? 0)).toFixed(2);
     els.compareResult.innerHTML = `
-      <strong>${result.isMatch ? "Same-person match" : "Different-look signal"}</strong><br />
+      <strong>${result.isMatch ? "Same-person match" : "No match found"}</strong><br />
       Same-person confidence ${Number(result.confidenceScore ?? 0).toFixed(2)}%<br />
-      Look transformation score ${transformation}%<br />
+      Doppleganger distance score ${transformation}%<br />
       Distance ${Number(result.distance ?? 0).toFixed(4)}
     `;
     await loadStats();
@@ -310,10 +282,10 @@ const analysisCards = (analysis) => {
   if (!analysis?.success) return `<div class="mini-card"><strong>Analysis unavailable</strong><p>${analysis?.error || "AI service is not ready."}</p></div>`;
   return `
     <div class="feature-grid">
-      <div class="mini-card"><dt>Quality</dt><dd>${analysis.quality.overallScore}%</dd><p>${analysis.quality.recommendedUse}</p></div>
       <div class="mini-card"><dt>Fake risk</dt><dd>${analysis.fakePhoto.riskScore}%</dd><p>${analysis.fakePhoto.label}</p></div>
-      <div class="mini-card"><dt>Identity</dt><dd>${analysis.identityCard.samePersonReadiness}%</dd><p>${analysis.identityCard.identityTier}</p></div>
-      <div class="mini-card"><dt>Expression</dt><dd>${analysis.demographic.dominantEmotion || "neutral"}</dd><p>${analysis.quality.faceAngle}</p></div>
+      <div class="mini-card"><dt>Texture noise</dt><dd>${analysis.fakePhoto.noiseSignature}</dd><p>Local image texture signal</p></div>
+      <div class="mini-card"><dt>Edge density</dt><dd>${analysis.fakePhoto.edgeDensity}</dd><p>Low edges can raise risk</p></div>
+      <div class="mini-card"><dt>Symmetry</dt><dd>${analysis.fakePhoto.symmetryScore}%</dd><p>High symmetry can raise risk</p></div>
     </div>
   `;
 };
@@ -333,9 +305,7 @@ const showDetails = async (id) => {
     els.detailBody.innerHTML = `
       <div class="detail-grid">
         <div>
-          <img class="detail-image" src="${apiUrl(`/images/${id}/file`)}" alt="${detail.originalFilename}" />
-          ${paletteHtml(analysis.palette)}
-          <button class="primary" type="button" onclick="window.print()"><span>Print ID Report</span></button>
+          <img class="detail-image" src="${apiUrl(`/images/${id}/file`)}" alt="${escapeHtml(detail.originalFilename)}" />
         </div>
         <div>
           ${analysisCards(analysis)}
@@ -346,15 +316,15 @@ const showDetails = async (id) => {
               ["Size", formatBytes(detail.fileSize)],
               ["Uploaded", formatDate(detail.uploadedAt)],
               ["Processed", formatDate(detail.processedAt)],
-              ["Blur", analysis.quality?.blurVariance ?? "n/a"],
-              ["Lighting", `${analysis.quality?.lightingScore ?? 0}%`],
-              ["Eye visibility", analysis.quality?.eyeVisibility ?? "unknown"],
+              ["Risk", `${analysis.fakePhoto?.riskScore ?? 0}%`],
+              ["Signal", analysis.fakePhoto?.label ?? "unknown"],
+              ["Detector", els.uploadDetector.options[els.uploadDetector.selectedIndex].text],
             ])}
           </dl>
-          <h3>AI Fake Photo Signal</h3>
+          <h3>AI Check Signal</h3>
           <pre>${JSON.stringify(analysis.fakePhoto || {}, null, 2)}</pre>
           <h3>Metadata</h3>
-          <pre>${JSON.stringify({ upload: metadata, studio: analysis.metadata, matches: detail.faceMatches || [] }, null, 2)}</pre>
+          <pre>${JSON.stringify({ upload: metadata, image: analysis.metadata, matches: detail.faceMatches || [] }, null, 2)}</pre>
         </div>
       </div>
     `;
@@ -388,28 +358,9 @@ const renderModule = () => {
     return;
   }
 
-  if (state.mode === "timeline") {
-    els.moduleOutput.innerHTML = `
-      <div class="timeline">
-        ${state.images.slice().reverse().map((image) => `
-          <div class="timeline-item">
-            <img src="${apiUrl(`/images/${image.id}/file`)}" alt="${image.originalFilename}" />
-            <div><strong>${image.originalFilename}</strong><p>${formatDate(image.uploadedAt)}</p><small>${image.faceCount ?? 0} face(s)</small></div>
-          </div>
-        `).join("")}
-      </div>
-    `;
-    return;
-  }
-
   const cards = {
-    movie: ["Face similarity", "Palette shift", "Costume tone", "Role transformation"],
-    doppelganger: ["Local dataset", "Closest pair", "Match history", "Visual distance"],
-    quality: ["Blur", "Lighting", "Face angle", "Recognition readiness"],
-    disguise: ["Before-after", "Beard or glasses", "Hair shift", "Still matches"],
-    identity: ["Detected face", "Dominant colors", "Expression", "Identity confidence"],
-    poster: ["Face crop", "Metadata", "Local matches", "Printable report"],
     fake: ["Texture noise", "Smoothness", "Symmetry", "AI risk"],
+    doppelganger: ["Local dataset", "Closest pair", "Match history", "Visual distance"],
   };
 
   els.moduleOutput.innerHTML = `
